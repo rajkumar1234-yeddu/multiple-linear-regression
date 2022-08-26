@@ -1,0 +1,113 @@
+import numpy as np
+from scipy import linalg
+
+n=int(input())
+p=int(input())
+y=list(map(int, input().split()))
+# 100 110 105 94 95 99 104 108 105 98 105 110
+y=np.matrix(y).reshape(n,1)
+x=list(map(int, input("Enter rowwise: ").split()))
+# 1 9 62 1 8 58 1 7 64 1 14 60 1 12 63 1 10 57 1 7 55 1 4 56 1 6 59 1 5 61 1 7 57 1 6 60
+x=np.matrix(x).reshape(n,p)
+xt=x.T
+
+print("y=",y)
+print("x=",x)
+print("xt=",xt)
+
+xtx_1=linalg.inv(np.dot(xt,x))
+xty=np.dot(xt,y)
+print(xtx_1)
+print(xty)
+
+B=np.dot(xtx_1,xty)
+B
+
+if len(B)==2:
+    print("y=",float(B[0]),"+ x",float(B[1]))
+elif len(B)==3:
+    print("y=",float(B[0]),"+ x1",float(B[1]),"+ x2",float(B[2]))
+    
+#goodness of fit R2
+
+fy=[]
+for i in range(n):
+    fy.append(float(B[0]) + float(B[1])*x[i,1] + float(B[2])*x[i,2])
+    
+fy=list(fy)
+fy=np.matrix(fy).reshape(n,1)
+print(fy)
+
+Eo=y-fy
+Eo
+
+y_=sum(y)/n
+sse=sum(list(np.array(Eo)**2))
+sst=0
+for i in range(n):
+    sst=sst+(y[i]-y_)**2
+
+ssr=sst-sse
+R2=ssr/sst
+
+print(y_,sse,sst,ssr,R2)
+
+if R2>0.9:
+    print("we accept the model")
+else:
+    print("we reject the model")
+    
+ #goodness of fit using ANOVA
+ 
+ alp=0.05
+Mssr=ssr/(p-1)
+Msse=sse/(n-p)
+F=Mssr/Msse
+print(Mssr,Msse,F)
+import scipy.stats as s
+Ft=s.f.ppf(1-alp,p-1,n-p)
+print(Ft)
+if F>Ft:
+    print("We reject Ho")
+    print("There is atleast one Bj that contributes to the model")
+    print("We accept the model")
+else:
+    print("We accept Ho")
+    print("There is no Bj that contributes to the model")
+    print("We reject the model")
+
+#to know which variable is more contributing
+
+c=[]
+for i in range(np.shape(xtx_1)[0]):
+  for j in range(np.shape(xtx_1)[1]):
+    if(i==j):
+      c.append(xtx_1[i][j])
+print(c)
+
+import math
+bet=np.array(B)
+beta=np.asarray(bet,int,'F')
+print(bet)
+for i in np.nditer(bet):
+  print(i)
+
+
+se=[]
+for i in c:
+  se.append(math.sqrt(Msse*i))
+se
+
+t=[]
+for i in range(len(bet)):
+  t.append(bet[i]/se[i])
+t
+
+t_tablevalue=s.t.ppf(1-(alp/2),n-p)
+print(t_tablevalue)
+
+for i in range(len(t)):
+  if abs(t[i])>=t_tablevalue:
+    print("we reject H0, bet[",i,"] is contributing to the model",bet[i])
+  else:
+    print("we accept H0, bet[",i,"] is not contributing to the model",bet[i])
